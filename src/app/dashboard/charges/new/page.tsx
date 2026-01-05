@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Loader2, Send, Copy, Check } from "lucide-react";
+import { ArrowLeft, Loader2, Send, Copy, Check, User } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
