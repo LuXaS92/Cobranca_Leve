@@ -36,7 +36,8 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: var(--font-inter), sans-serif;
-  antialiased;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1,

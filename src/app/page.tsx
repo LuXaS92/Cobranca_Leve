@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Heart, ShieldCheck, Zap, ArrowRight, MessageCircle } from "lucide-react";
 
 export default function Home() {
@@ -20,8 +20,8 @@ export default function Home() {
             <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-primary-600 hidden sm:block">
               Entrar
             </Link>
-            <Link href="/register">
-              <Button size="sm">Começar Grátis</Button>
+            <Link href="/register" className={buttonVariants({ size: 'sm' })}>
+              Começar Grátis
             </Link>
           </div>
         </div>
@@ -45,16 +45,12 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-            <Link href="/register">
-              <Button size="lg" className="w-full sm:w-auto text-lg px-8">
-                Criar minha primeira cobrança
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
+            <Link href="/register" className={buttonVariants({ size: 'lg', className: 'w-full sm:w-auto text-lg px-8' })}>
+              Criar minha primeira cobrança
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
-            <Link href="/demo">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                Ver exemplos
-              </Button>
+            <Link href="/demo" className={buttonVariants({ variant: 'outline', size: 'lg', className: 'w-full sm:w-auto' })}>
+              Ver exemplos
             </Link>
           </div>
 
@@ -128,8 +124,8 @@ export default function Home() {
               <ListItem>Envio por WhatsApp e Email</ListItem>
               <ListItem>Link de pagamento integrado (Em breve)</ListItem>
             </ul>
-            <Link href="/register">
-              <Button>Começar Agora</Button>
+            <Link href="/register" className={buttonVariants()}>
+              Começar Agora
             </Link>
           </div>
         </section>

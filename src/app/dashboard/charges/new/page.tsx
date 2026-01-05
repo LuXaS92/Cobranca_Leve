@@ -68,14 +68,41 @@ export default function NewChargePage() {
     const handleSend = async (method: "WHATSAPP" | "EMAIL") => {
         if (!selectedClientId || !amount) return;
 
-        // Save charge to DB
-        // In a real app, I'd POST to /api/charges first
+        const client = clients.find(c => c.id === selectedClientId);
 
         if (method === "WHATSAPP") {
-            const client = clients.find(c => c.id === selectedClientId);
             if (client) {
                 const encoded = encodeURIComponent(message);
                 window.open(`https://wa.me/55${client.whatsapp}?text=${encoded}`, "_blank");
+            }
+        } else if (method === "EMAIL") {
+            if (!client?.email) {
+                alert("Este cliente não possui email cadastrado.");
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const res = await fetch("/api/email/send", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        clientId: client.id,
+                        amount,
+                        dueDate,
+                        messageHtml: message.replace(/\n/g, '<br>'),
+                        subject: `Lembrete de Pagamento - ${TEMPLATES[tone].title}`
+                    })
+                });
+
+                if (!res.ok) throw new Error("Erro ao enviar email");
+
+                alert("Email enviado com sucesso!");
+            } catch (e) {
+                alert("Erro ao enviar email. Tente novamente.");
+                console.error(e);
+            } finally {
+                setLoading(false);
             }
         }
     };
@@ -198,7 +225,17 @@ export default function NewChargePage() {
                             <Send className="mr-2 h-5 w-5" />
                             Enviar no WhatsApp
                         </Button>
-                        {/* Email implementation in future */}
+                        <Button
+                            fullWidth
+                            size="lg"
+                            variant="secondary"
+                            className="bg-sky-600 hover:bg-sky-700 text-white"
+                            onClick={() => handleSend("EMAIL")}
+                            disabled={loading}
+                        >
+                            {loading ? <Loader2 className="animate-spin mr-2" /> : <Send className="mr-2 h-5 w-5" />}
+                            Enviar por Email
+                        </Button>
                     </div>
                 </div>
             </div>

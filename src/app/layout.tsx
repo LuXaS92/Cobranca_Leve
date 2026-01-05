@@ -28,6 +28,7 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body
         className={`${inter.variable} ${outfit.variable} antialiased min-h-screen bg-slate-50`}
+        suppressHydrationWarning
       >
         {children}
       </body>

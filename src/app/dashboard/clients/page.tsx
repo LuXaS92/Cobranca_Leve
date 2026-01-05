@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma"; // Direct DB access in Server Component
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Plus, User, MessageCircle } from "lucide-react";
 
 export default async function ClientsPage() {
@@ -11,7 +11,7 @@ export default async function ClientsPage() {
 
     // @ts-ignore
     const clients = await prisma.client.findMany({
-        where: { userId: session.user.id },
+        where: { userId: (session.user as any).id },
         orderBy: { createdAt: 'desc' },
         include: { _count: { select: { charges: true } } }
     });
@@ -20,11 +20,9 @@ export default async function ClientsPage() {
         <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-8">
                 <h1 className="text-2xl font-heading font-bold text-slate-800">Meus Clientes</h1>
-                <Link href="/dashboard/clients/new">
-                    <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Novo Cliente
-                    </Button>
+                <Link href="/dashboard/clients/new" className={buttonVariants()}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Novo Cliente
                 </Link>
             </div>
 
@@ -35,8 +33,8 @@ export default async function ClientsPage() {
                     </div>
                     <h3 className="text-lg font-bold text-slate-800 mb-2">Nenhum cliente ainda</h3>
                     <p className="text-slate-500 mb-6">Cadastre seu primeiro cliente para começar a cobrar.</p>
-                    <Link href="/dashboard/clients/new">
-                        <Button>Cadastrar Cliente</Button>
+                    <Link href="/dashboard/clients/new" className={buttonVariants()}>
+                        Cadastrar Cliente
                     </Link>
                 </div>
             ) : (
@@ -60,8 +58,8 @@ export default async function ClientsPage() {
                                 {client.email && <p className="ml-6">{client.email}</p>}
                             </div>
                             <div className="flex gap-2">
-                                <Link href={`/dashboard/charges/new?client=${client.id}`} className="flex-1">
-                                    <Button variant="secondary" size="sm" fullWidth>Nova Cobrança</Button>
+                                <Link href={`/dashboard/charges/new?client=${client.id}`} className={buttonVariants({ variant: "secondary", size: "sm", fullWidth: true, className: "flex-1" })}>
+                                    Nova Cobrança
                                 </Link>
                             </div>
                         </div>
