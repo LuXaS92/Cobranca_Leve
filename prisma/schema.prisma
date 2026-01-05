@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  clients       Client[]
+  charges       Charge[]
+  subscriptions Subscription[]
+  messageTemplates MessageTemplate[]
+  
+  @@map("users")
+}
+
+model Subscription {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  plan      PlanType @default(FREE)
+  status    SubscriptionStatus @default(ACTIVE)
+  startedAt DateTime @default(now()) @map("started_at")
+  expiresAt DateTime? @map("expires_at")
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("subscriptions")
+}
+
+model Client {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  name      String
+  email     String?
+  whatsapp  String
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  charges   Charge[]
+
+  @@index([userId])
+  @@map("clients")
+}
+
+model Charge {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  clientId    String   @map("client_id")
+  amount      Decimal  @db.Decimal(10, 2)
+  dueDate     DateTime @map("due_date")
+  status      ChargeStatus @default(PENDING)
+  messageType String   @map("message_type") // FRIENDLY, NEUTRAL, PROFESSIONAL
+  sentAt      DateTime? @map("sent_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([clientId])
+  @@map("charges")
+}
+
+model MessageTemplate {
+  id      String @id @default(uuid())
+  userId  String @map("user_id")
+  type    String // FRIENDLY, NEUTRAL, PROFESSIONAL
+  title   String
+  content String
+  
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("message_templates")
+}
+
+enum PlanType {
+  FREE
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  CANCELED
+}
+
+enum ChargeStatus {
+  PENDING
+  SENT
+  PAID
+  CANCELLED
+}
