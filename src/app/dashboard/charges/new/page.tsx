@@ -65,6 +65,40 @@ export default function NewChargePage() {
         setMessage(TEMPLATES[tone].text(clientName, formattedAmount));
     }, [tone, selectedClientId, amount, clients]);
 
+    const handleCreate = async () => {
+        if (!selectedClientId || !amount || !dueDate) {
+            alert("Preencha todos os campos obrigatórios");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const res = await fetch("/api/charges", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    clientId: selectedClientId,
+                    amount,
+                    dueDate,
+                    messageType: tone,
+                })
+            });
+
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.message || "Erro ao criar cobrança");
+            }
+
+            alert("Cobrança criada com sucesso!");
+            router.push("/dashboard/charges");
+        } catch (e: any) {
+            alert(e.message || "Erro ao criar cobrança. Tente novamente.");
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSend = async (method: "WHATSAPP" | "EMAIL") => {
         if (!selectedClientId || !amount) return;
 
@@ -215,27 +249,60 @@ export default function NewChargePage() {
                         </div>
                     </div>
 
-                    <div className="mt-8 flex gap-4">
+                    {/* Action Buttons */}
+                    <div className="mt-8 space-y-3">
                         <Button
+                            onClick={handleCreate}
+                            disabled={loading || !selectedClientId || !amount || !dueDate}
                             fullWidth
-                            size="lg"
-                            className="bg-green-600 hover:bg-green-700"
-                            onClick={() => handleSend("WHATSAPP")}
+                            variant="outline"
                         >
-                            <Send className="mr-2 h-5 w-5" />
-                            Enviar no WhatsApp
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Criando...
+                                </>
+                            ) : (
+                                "Criar Cobrança"
+                            )}
                         </Button>
-                        <Button
-                            fullWidth
-                            size="lg"
-                            variant="secondary"
-                            className="bg-sky-600 hover:bg-sky-700 text-white"
-                            onClick={() => handleSend("EMAIL")}
-                            disabled={loading}
-                        >
-                            {loading ? <Loader2 className="animate-spin mr-2" /> : <Send className="mr-2 h-5 w-5" />}
-                            Enviar por Email
-                        </Button>
+
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-slate-200"></div>
+                            </div>
+                            <div className="relative flex justify-center text-xs">
+                                <span className="bg-white px-2 text-slate-500">ou enviar agora</span>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <Button
+                                onClick={() => handleSend("WHATSAPP")}
+                                disabled={loading || !selectedClientId || !amount}
+                                className="bg-green-600 hover:bg-green-700"
+                            >
+                                <Send className="mr-2 h-4 w-4" />
+                                Enviar no WhatsApp
+                            </Button>
+
+                            <Button
+                                onClick={() => handleSend("EMAIL")}
+                                disabled={loading || !selectedClientId || !amount}
+                            >
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Enviando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send className="mr-2 h-4 w-4" />
+                                        Enviar por Email
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>

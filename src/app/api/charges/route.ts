@@ -11,6 +11,30 @@ const createChargeSchema = z.object({
     messageType: z.literal("FRIENDLY").or(z.literal("NEUTRAL")).or(z.literal("PROFESSIONAL")),
 });
 
+export async function GET(req: Request) {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+        return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // @ts-ignore
+    const userId = session.user.id;
+
+    try {
+        const charges = await prisma.charge.findMany({
+            where: { userId },
+            include: { client: true },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        return NextResponse.json(charges);
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ message: "Internal Error" }, { status: 500 });
+    }
+}
+
+
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {

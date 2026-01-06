@@ -66,11 +66,19 @@ model Charge {
   sentAt      DateTime? @map("sent_at")
   createdAt   DateTime @default(now()) @map("created_at")
   
+  // Automated reminder tracking
+  reminderBeforeSent Boolean @default(false) @map("reminder_before_sent")
+  reminderDueSent    Boolean @default(false) @map("reminder_due_sent")
+  reminderAfterSent  Boolean @default(false) @map("reminder_after_sent")
+  lastReminderSentAt DateTime? @map("last_reminder_sent_at")
+  
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([clientId])
+  @@index([status])
+  @@index([dueDate])
   @@map("charges")
 }
 

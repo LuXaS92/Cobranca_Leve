@@ -1,30 +1,37 @@
-"use client"
-
-import { useState, useEffect } from "react";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Check, Zap, Crown } from "lucide-react";
 
-export default function SubscriptionPage() {
-    const [subscription, setSubscription] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+export default async function SubscriptionPage() {
+    const session = await getServerSession(authOptions);
+    if (!session) return null;
 
-    useEffect(() => {
-        // In a real app, fetch subscription from API
-        // For MVP, we'll use mock data
-        setSubscription({
-            plan: 'FREE',
-            status: 'ACTIVE',
-            chargesThisMonth: 2,
-            chargesLimit: 3
-        });
-        setLoading(false);
-    }, []);
+    // @ts-ignore
+    const userId = (session.user as any).id;
 
-    if (loading) {
-        return <div className="flex items-center justify-center h-64">Carregando...</div>;
-    }
+    // Fetch user's subscription
+    const subscription = await prisma.subscription.findFirst({
+        where: { userId },
+        orderBy: { startedAt: 'desc' }
+    });
+
+    // Count charges created this month
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const chargesThisMonth = await prisma.charge.count({
+        where: {
+            userId,
+            createdAt: {
+                gte: firstDayOfMonth
+            }
+        }
+    });
 
     const isFree = subscription?.plan === 'FREE';
+    const chargesLimit = isFree ? 3 : 999999; // Pro = unlimited
 
     return (
         <div className="max-w-5xl mx-auto">
@@ -47,14 +54,19 @@ export default function SubscriptionPage() {
                 {isFree && (
                     <div className="mt-4 p-4 bg-yellow-50 border border-yellow-100 rounded-xl">
                         <p className="text-sm text-yellow-800">
-                            <strong>Uso este mês:</strong> {subscription.chargesThisMonth} de {subscription.chargesLimit} cobranças
+                            <strong>Uso este mês:</strong> {chargesThisMonth} de {chargesLimit} cobranças
                         </p>
                         <div className="w-full bg-yellow-200 rounded-full h-2 mt-2">
                             <div
                                 className="bg-yellow-500 h-2 rounded-full transition-all"
-                                style={{ width: `${(subscription.chargesThisMonth / subscription.chargesLimit) * 100}%` }}
+                                style={{ width: `${Math.min((chargesThisMonth / chargesLimit) * 100, 100)}%` }}
                             />
                         </div>
+                        {chargesThisMonth >= chargesLimit && (
+                            <p className="text-sm text-red-600 mt-2 font-semibold">
+                                ⚠️ Você atingiu o limite do plano gratuito. Faça upgrade para continuar criando cobranças!
+                            </p>
+                        )}
                     </div>
                 )}
             </div>

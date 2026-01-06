@@ -49,7 +49,7 @@ export default function Home() {
               Criar minha primeira cobrança
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
-            <Link href="/demo" className={buttonVariants({ variant: 'outline', size: 'lg', className: 'w-full sm:w-auto' })}>
+            <Link href="/examples" className={buttonVariants({ variant: 'outline', size: 'lg', className: 'w-full sm:w-auto' })}>
               Ver exemplos
             </Link>
           </div>

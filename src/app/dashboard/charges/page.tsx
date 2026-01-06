@@ -1,21 +1,53 @@
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+"use client"
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { Plus, FileText, Calendar, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Plus, FileText, Calendar, Edit2, CheckCircle, Loader2 } from "lucide-react";
 
-export default async function ChargesPage() {
-    const session = await getServerSession(authOptions);
-    if (!session) return null;
+export default function ChargesPage() {
+    const [charges, setCharges] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-    // @ts-ignore
-    const charges = await prisma.charge.findMany({
-        where: { userId: (session.user as any).id },
-        include: { client: true },
-        orderBy: { createdAt: 'desc' },
-        take: 50
-    });
+    useEffect(() => {
+        fetchCharges();
+    }, []);
+
+    const fetchCharges = async () => {
+        try {
+            const res = await fetch('/api/charges');
+            const data = await res.json();
+            setCharges(data);
+        } catch (error) {
+            console.error('Error fetching charges:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleMarkAsPaid = async (chargeId: string) => {
+        if (!confirm('Marcar esta cobrança como paga?')) return;
+
+        setActionLoading(chargeId);
+        try {
+            const res = await fetch(`/api/charges/${chargeId}/mark-paid`, {
+                method: 'POST',
+            });
+
+            if (!res.ok) throw new Error('Erro ao marcar como pago');
+
+            // Refresh charges
+            await fetchCharges();
+            alert('Cobrança marcada como paga!');
+        } catch (error) {
+            console.error('Error marking as paid:', error);
+            alert('Erro ao marcar como pago. Tente novamente.');
+        } finally {
+            setActionLoading(null);
+        }
+    };
 
     const stats = {
         total: charges.length,
@@ -23,6 +55,14 @@ export default async function ChargesPage() {
         sent: charges.filter(c => c.status === 'SENT').length,
         paid: charges.filter(c => c.status === 'PAID').length,
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-7xl mx-auto">
@@ -65,6 +105,7 @@ export default async function ChargesPage() {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tom</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Criada em</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Ações</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -96,6 +137,35 @@ export default async function ChargesPage() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                                             {new Date(charge.createdAt).toLocaleDateString('pt-BR')}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <div className="flex items-center justify-end gap-2">
+                                                {charge.status !== 'PAID' && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => handleMarkAsPaid(charge.id)}
+                                                        disabled={actionLoading === charge.id}
+                                                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                    >
+                                                        {actionLoading === charge.id ? (
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                        ) : (
+                                                            <>
+                                                                <CheckCircle className="h-4 w-4 mr-1" />
+                                                                Marcar Pago
+                                                            </>
+                                                        )}
+                                                    </Button>
+                                                )}
+                                                <Link
+                                                    href={`/dashboard/charges/${charge.id}/edit`}
+                                                    className={buttonVariants({ size: 'sm', variant: 'outline' })}
+                                                >
+                                                    <Edit2 className="h-4 w-4 mr-1" />
+                                                    Editar
+                                                </Link>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
