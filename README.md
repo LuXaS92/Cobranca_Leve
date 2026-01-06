@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cobrança Leve 🍃
 
-## Getting Started
+> Cobre seus clientes sem climão. Um SaaS de cobrança empática e automatizada.
 
-First, run the development server:
+O **Cobrança Leve** é uma plataforma projetada para ajudar autônomos e pequenas empresas a gerenciar cobranças de forma profissional e automatizada, preservando o relacionamento com o cliente através de uma comunicação empática.
+
+![Dashboard Preview](https://via.placeholder.com/800x400?text=Dashboard+Preview)
+
+## 🚀 Funcionalidades
+
+-   **Gestão de Cobranças**: Crie, edite e acompanhe o status de pagamentos.
+-   **Comunicação Empática**: Templates de mensagens (WhatsApp e Email) com tons ajustáveis (Amigável, Neutro, Profissional).
+-   **Automação Inteligente**: Envio automático de lembretes (3 dias antes, no dia, e após vencimento).
+-   **Dashboard Vibrante**: Visão geral financeira com design moderno e responsivo.
+-   **Gestão de Clientes**: Cadastro e histórico de pagadores.
+-   **Login Seguro**: Autenticação via NextAuth com recuperação de senha.
+
+## 🛠️ Tecnologias
+
+Este projeto utiliza as tecnologias mais modernas do ecossistema React/Node:
+
+-   **Frontend**: [Next.js 16](https://nextjs.org/) (App Router, Turbopack)
+-   **Estilização**: [Tailwind CSS v4](https://tailwindcss.com/) (com tema customizado e animações)
+-   **Banco de Dados**: PostgreSQL com [Prisma ORM](https://www.prisma.io/)
+-   **Autenticação**: [NextAuth.js](https://next-auth.js.org/)
+-   **Automação**: BullMQ (Filas) + Redis + Node-Cron
+-   **Ícones**: Lucide React
+
+## 📦 Instalação
+
+### Pré-requisitos
+-   Node.js 18+
+-   PostgreSQL
+-   Redis (para as filas de automação)
+
+### Passo a Passo
+
+1.  **Clone o repositório**
+    ```bash
+    git clone https://github.com/seu-usuario/cobranca-leve.git
+    cd cobranca-leve
+    ```
+
+2.  **Instale as dependências**
+    ```bash
+    npm install
+    ```
+
+3.  **Configure as Variáveis de Ambiente**
+    Crie um arquivo `.env` na raiz baseado no exemplo:
+    ```env
+    DATABASE_URL="postgresql://user:password@localhost:5432/cobranca_leve"
+    NEXTAUTH_SECRET="sua-chave-secreta"
+    NEXTAUTH_URL="http://localhost:3000"
+    REDIS_URL="redis://localhost:6379"
+    ```
+
+4.  **Configure o Banco de Dados**
+    ```bash
+    npx prisma db push
+    ```
+
+5.  **Inicie o Servidor de Desenvolvimento**
+    ```bash
+    npm run dev
+    ```
+    Acesse `http://localhost:3000`.
+
+## 🤖 Rodando a Automação
+
+Para que os lembretes automáticos funcionem, você precisa rodar os scripts de worker e cron em terminais separados (ou configurá-los no seu servidor):
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Terminal 2: Worker (Processa envio de mensagens)
+npm run worker
+
+# Terminal 3: Cron (Agendador diário)
+npm run cron
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🤝 Contribuição
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou enviar pull requests.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📄 Licença
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Este projeto está sob a licença MIT.
