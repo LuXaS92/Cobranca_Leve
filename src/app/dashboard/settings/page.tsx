@@ -1,20 +1,101 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { User, Mail, Lock, Bell, Palette } from "lucide-react";
+import { User, Lock, Bell, Loader2, Save } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function SettingsPage() {
+    const { update } = useSession();
+    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+
+    // Form States
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    const fetchProfile = async () => {
+        try {
+            const res = await fetch('/api/user/profile');
+            const data = await res.json();
+            if (data) {
+                setName(data.name || "");
+                setEmail(data.email || "");
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSave = async () => {
         setSaving(true);
-        // Simulate save
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setSaving(false);
-        alert("Configurações salvas com sucesso!");
+        try {
+            // Validate password change
+            if (newPassword) {
+                if (newPassword !== confirmPassword) {
+                    alert('As senhas não conferem');
+                    setSaving(false);
+                    return;
+                }
+                if (!currentPassword) {
+                    alert('Digite sua senha atual para alterar a senha');
+                    setSaving(false);
+                    return;
+                }
+            }
+
+            const body: any = { name, email };
+            if (newPassword) {
+                body.currentPassword = currentPassword;
+                body.newPassword = newPassword;
+            }
+
+            const res = await fetch('/api/user/profile', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Erro ao atualizar');
+            }
+
+            // Update session
+            await update({ name: data.name, email: data.email });
+
+            alert("Configurações salvas com sucesso!");
+
+            // Clear password fields
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+
+        } catch (error: any) {
+            console.error('Error saving profile:', error);
+            alert(error.message || "Erro ao salvar configurações");
+        } finally {
+            setSaving(false);
+        }
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-4xl mx-auto">
@@ -22,7 +103,7 @@ export default function SettingsPage() {
 
             <div className="space-y-6">
                 {/* Profile Section */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div className="clean-card p-6">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
                             <User size={20} className="text-primary-600" />
@@ -34,22 +115,30 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="space-y-4">
-                        <Input
-                            label="Nome Completo"
-                            placeholder="Seu nome"
-                            defaultValue="Lucas Castro"
-                        />
-                        <Input
-                            label="Email"
-                            type="email"
-                            placeholder="seu@email.com"
-                            defaultValue="lucas@teste.com"
-                        />
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Nome Completo</label>
+                            <input
+                                className="clean-input w-full"
+                                placeholder="Seu nome"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+                            <input
+                                className="clean-input w-full"
+                                type="email"
+                                placeholder="seu@email.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </div>
                     </div>
                 </div>
 
                 {/* Security Section */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div className="clean-card p-6">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
                             <Lock size={20} className="text-red-600" />
@@ -61,32 +150,47 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="space-y-4">
-                        <Input
-                            label="Senha Atual"
-                            type="password"
-                            placeholder="••••••••"
-                        />
-                        <Input
-                            label="Nova Senha"
-                            type="password"
-                            placeholder="••••••••"
-                        />
-                        <Input
-                            label="Confirmar Nova Senha"
-                            type="password"
-                            placeholder="••••••••"
-                        />
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Senha Atual</label>
+                            <input
+                                className="clean-input w-full"
+                                type="password"
+                                placeholder="••••••••"
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Nova Senha</label>
+                            <input
+                                className="clean-input w-full"
+                                type="password"
+                                placeholder="••••••••"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Confirmar Nova Senha</label>
+                            <input
+                                className="clean-input w-full"
+                                type="password"
+                                placeholder="••••••••"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                            />
+                        </div>
                     </div>
                 </div>
 
-                {/* Notifications Section */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                {/* Notifications Section - Visual Only for MVP */}
+                <div className="clean-card p-6 opacity-60 pointer-events-none grayscale">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                             <Bell size={20} className="text-blue-600" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-slate-800">Notificações</h2>
+                            <h2 className="text-lg font-bold text-slate-800">Notificações (Em breve)</h2>
                             <p className="text-sm text-slate-500">Gerencie como você recebe notificações</p>
                         </div>
                     </div>
@@ -102,47 +206,26 @@ export default function SettingsPage() {
                             description="Receba um email quando um pagamento for confirmado"
                             defaultChecked={true}
                         />
-                        <NotificationToggle
-                            label="Resumo semanal"
-                            description="Receba um resumo das suas cobranças toda semana"
-                            defaultChecked={false}
-                        />
-                    </div>
-                </div>
-
-                {/* Preferences Section */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                            <Palette size={20} className="text-purple-600" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-slate-800">Preferências</h2>
-                            <p className="text-sm text-slate-500">Personalize sua experiência</p>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
-                                Tom padrão das mensagens
-                            </label>
-                            <select className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
-                                <option value="FRIENDLY">Amigável</option>
-                                <option value="NEUTRAL">Neutro</option>
-                                <option value="PROFESSIONAL">Profissional</option>
-                            </select>
-                        </div>
                     </div>
                 </div>
 
                 {/* Save Button */}
-                <div className="flex justify-end gap-4">
-                    <Button variant="outline">
+                <div className="flex justify-end gap-4 pb-10">
+                    <Button variant="outline" onClick={() => fetchProfile()}>
                         Cancelar
                     </Button>
-                    <Button onClick={handleSave} disabled={saving}>
-                        {saving ? 'Salvando...' : 'Salvar Alterações'}
+                    <Button onClick={handleSave} disabled={saving} className="btn-primary">
+                        {saving ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Salvando...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="mr-2 h-4 w-4" />
+                                Salvar Alterações
+                            </>
+                        )}
                     </Button>
                 </div>
             </div>

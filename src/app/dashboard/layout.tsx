@@ -24,7 +24,7 @@ export default function DashboardLayout({
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
-        <div className="flex h-screen bg-slate-50 overflow-hidden">
+        <div className="flex h-screen overflow-hidden">
             {/* Mobile Sidebar Overlay */}
             {sidebarOpen && (
                 <div
@@ -35,19 +35,19 @@ export default function DashboardLayout({
 
             {/* Sidebar */}
             <aside className={cn(
-                "fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white border-r border-slate-100 transform transition-transform duration-200 ease-in-out lg:translate-x-0 flex flex-col",
+                "fixed lg:static inset-y-0 left-0 z-30 w-64 sidebar-dark border-r border-white/50 shadow-xl transform transition-transform duration-200 ease-in-out lg:translate-x-0 flex flex-col backdrop-blur-md",
                 sidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}>
-                <div className="h-16 flex items-center px-6 border-b border-slate-100">
-                    <Link href="/dashboard" className="flex items-center gap-2 font-heading font-bold text-xl text-slate-800">
-                        <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center text-white text-sm">
+                <div className="h-16 flex items-center px-6 border-b border-gray-100/50">
+                    <Link href="/dashboard" className="flex items-center gap-2 font-heading font-bold text-xl gradient-text">
+                        <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center text-white text-sm shadow-lg">
                             CL
                         </div>
                         Cobrança Leve
                     </Link>
                     <button
                         onClick={() => setSidebarOpen(false)}
-                        className="ml-auto lg:hidden text-slate-500"
+                        className="ml-auto lg:hidden text-gray-500"
                     >
                         <X size={20} />
                     </button>
@@ -74,16 +74,16 @@ export default function DashboardLayout({
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 lg:px-8">
+                <header className="h-16 bg-white/50 backdrop-blur-md border-b border-white/50 flex items-center justify-between px-4 lg:px-8 shadow-sm relative z-20">
                     <button
                         onClick={() => setSidebarOpen(true)}
-                        className="lg:hidden text-slate-600"
+                        className="lg:hidden text-gray-600"
                     >
                         <Menu size={24} />
                     </button>
 
                     <div className="ml-auto flex items-center gap-4">
-                        <div className="w-8 h-8 rounded-full bg-slate-200 border border-slate-300"></div>
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-400 to-secondary-500 border-2 border-white shadow-md"></div>
                     </div>
                 </header>
 
@@ -106,10 +106,10 @@ function NavItem({ href, icon, label }: { href: string; icon: React.ReactNode; l
         <Link
             href={href}
             className={cn(
-                "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all",
+                "sidebar-nav-item flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl transition-all mx-2 mb-1",
                 isExactActive
-                    ? "bg-primary-50 text-primary-700"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    ? "bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg shadow-primary-500/30 active"
+                    : "text-slate-600 hover:bg-slate-100/50 hover:text-primary-600"
             )}
         >
             {icon}

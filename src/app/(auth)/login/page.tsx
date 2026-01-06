@@ -6,13 +6,14 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -76,15 +77,25 @@ export default function LoginPage() {
 
                 <Input
                     label="Senha"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    endIcon={
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="focus:outline-none hover:text-slate-600"
+                            tabIndex={-1}
+                        >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    }
                 />
 
                 <div className="flex justify-end">
-                    <Link href="#" className="text-xs text-primary-600 hover:text-primary-500 font-medium">
+                    <Link href="/forgot-password" className="text-xs text-primary-600 hover:text-primary-500 font-medium transition-colors">
                         Esqueceu a senha?
                     </Link>
                 </div>

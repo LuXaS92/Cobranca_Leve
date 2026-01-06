@@ -142,42 +142,71 @@ export default async function DashboardPage() {
                         <Link href="/dashboard/charges/new" className="text-primary-600 hover:underline mt-2 inline-block">Criar a primeira</Link>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-100">
-                                    <th className="pb-3 pl-4">Cliente</th>
-                                    <th className="pb-3">Valor</th>
-                                    <th className="pb-3">Vencimento</th>
-                                    <th className="pb-3">Status</th>
-                                    <th className="pb-3"></th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {recentCharges.map((charge) => (
-                                    <tr key={charge.id} className="group hover:bg-slate-50 transition-colors">
-                                        <td className="py-4 pl-4 font-medium text-slate-800">
-                                            {charge.client.name}
-                                        </td>
-                                        <td className="py-4 text-slate-600">
+                    <>
+                        {/* Mobile View: Card List */}
+                        <div className="md:hidden space-y-4">
+                            {recentCharges.map((charge) => (
+                                <div key={charge.id} className="p-4 border border-slate-100 rounded-xl bg-slate-50/50 flex flex-col gap-3">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="font-bold text-slate-800">{charge.client.name}</div>
+                                            <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                                                <Clock size={12} />
+                                                Vence em {format(new Date(charge.dueDate), "dd/MM/yyyy")}
+                                            </div>
+                                        </div>
+                                        <StatusBadge status={charge.displayStatus} />
+                                    </div>
+                                    <div className="flex justify-between items-center pt-2 border-t border-slate-100/50">
+                                        <span className="font-bold text-slate-800 text-lg">
                                             {formatCurrency(charge.amount)}
-                                        </td>
-                                        <td className="py-4 text-slate-600">
-                                            {format(new Date(charge.dueDate), "dd/MM/yyyy")}
-                                        </td>
-                                        <td className="py-4">
-                                            <StatusBadge status={charge.displayStatus} />
-                                        </td>
-                                        <td className="py-4 text-right pr-4">
-                                            <Link href={`/dashboard/charges/${charge.id}`} className="text-slate-400 hover:text-primary-600">
-                                                Detalhes
-                                            </Link>
-                                        </td>
+                                        </span>
+                                        <Link href={`/dashboard/charges/${charge.id}`} className="text-sm font-medium text-primary-600 hover:text-primary-700">
+                                            Detalhes
+                                        </Link>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Desktop View: Table */}
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                                        <th className="pb-3 pl-4">Cliente</th>
+                                        <th className="pb-3">Valor</th>
+                                        <th className="pb-3">Vencimento</th>
+                                        <th className="pb-3">Status</th>
+                                        <th className="pb-3"></th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {recentCharges.map((charge) => (
+                                        <tr key={charge.id} className="group hover:bg-slate-50/50 transition-colors">
+                                            <td className="py-4 pl-4 font-medium text-slate-800">
+                                                {charge.client.name}
+                                            </td>
+                                            <td className="py-4 text-slate-600">
+                                                {formatCurrency(charge.amount)}
+                                            </td>
+                                            <td className="py-4 text-slate-600">
+                                                {format(new Date(charge.dueDate), "dd/MM/yyyy")}
+                                            </td>
+                                            <td className="py-4">
+                                                <StatusBadge status={charge.displayStatus} />
+                                            </td>
+                                            <td className="py-4 text-right pr-4">
+                                                <Link href={`/dashboard/charges/${charge.id}`} className="text-slate-400 hover:text-primary-600 font-medium text-sm">
+                                                    Detalhes
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
                 )}
             </div>
         </div>

@@ -95,7 +95,69 @@ export default function ChargesPage() {
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                    <div className="overflow-x-auto">
+                    {/* Mobile View: Card List */}
+                    <div className="md:hidden divide-y divide-slate-100">
+                        {charges.map(charge => (
+                            <div key={charge.id} className="p-4 flex flex-col gap-3">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <div className="font-bold text-slate-900">{charge.client.name}</div>
+                                        <div className="text-xs text-slate-500">{charge.client.whatsapp}</div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="font-bold text-slate-900 mb-1">
+                                            R$ {Number(charge.amount).toFixed(2)}
+                                        </div>
+                                        <StatusBadge status={charge.status} />
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between items-center text-sm text-slate-500 bg-slate-50 p-2 rounded-lg">
+                                    <div className="flex items-center gap-1.5">
+                                        <Calendar size={14} />
+                                        <span>{new Date(charge.dueDate).toLocaleDateString('pt-BR')}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                        <span className="text-xs">
+                                            {charge.messageType === 'FRIENDLY' ? 'Amigável' :
+                                                charge.messageType === 'NEUTRAL' ? 'Neutro' : 'Profissional'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 mt-1">
+                                    {charge.status !== 'PAID' && (
+                                        <Button
+                                            size="sm"
+                                            onClick={() => handleMarkAsPaid(charge.id)}
+                                            disabled={actionLoading === charge.id}
+                                            className="flex-1 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-transparent shadow-none"
+                                        >
+                                            {actionLoading === charge.id ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <>
+                                                    <CheckCircle className="h-4 w-4 mr-1.5" />
+                                                    Marcar Pago
+                                                </>
+                                            )}
+                                        </Button>
+                                    )}
+                                    <Link
+                                        href={`/dashboard/charges/${charge.id}/edit`}
+                                        className={`flex-1 ${buttonVariants({ size: 'sm', variant: 'outline' })}`}
+                                    >
+                                        <Edit2 className="h-4 w-4 mr-1.5" />
+                                        Editar
+                                    </Link>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Desktop View: Table */}
+                    <div className="hidden md:block overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-slate-50 border-b border-slate-100">
                                 <tr>
