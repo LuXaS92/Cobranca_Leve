@@ -10,6 +10,7 @@ const updateProfileSchema = z.object({
     email: z.string().email("Email inválido").optional(),
     currentPassword: z.string().min(6).optional(),
     newPassword: z.string().min(6).optional(),
+    mpAccessToken: z.string().optional(),
 });
 
 export async function PATCH(req: NextRequest) {
@@ -23,7 +24,7 @@ export async function PATCH(req: NextRequest) {
         const userId = session.user.id;
         const body = await req.json();
 
-        const { name, email, currentPassword, newPassword } = updateProfileSchema.parse(body);
+        const { name, email, currentPassword, newPassword, mpAccessToken } = updateProfileSchema.parse(body);
 
         // Get current user data
         const user = await prisma.user.findUnique({
@@ -38,6 +39,7 @@ export async function PATCH(req: NextRequest) {
 
         if (name) updateData.name = name;
         if (email) updateData.email = email;
+        if (mpAccessToken !== undefined) updateData.mpAccessToken = mpAccessToken;
 
         // Handle password update if provided
         if (newPassword) {
@@ -71,6 +73,7 @@ export async function PATCH(req: NextRequest) {
                 id: true,
                 name: true,
                 email: true,
+                mpAccessToken: true,
                 // Exclude password
             },
         });
@@ -104,6 +107,7 @@ export async function GET(req: NextRequest) {
             select: {
                 name: true,
                 email: true,
+                mpAccessToken: true,
             },
         });
 

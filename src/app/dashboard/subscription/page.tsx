@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
+import { PlanActions } from "@/components/subscription/PlanActions";
 import { Check, Zap, Crown } from "lucide-react";
 
 export default async function SubscriptionPage() {
@@ -93,15 +93,7 @@ export default async function SubscriptionPage() {
                         <Feature text="Envio por WhatsApp" />
                         <Feature text="Envio por Email" />
                     </ul>
-                    {isFree ? (
-                        <Button variant="outline" fullWidth disabled>
-                            Plano Atual
-                        </Button>
-                    ) : (
-                        <Button variant="outline" fullWidth>
-                            Voltar para Gratuito
-                        </Button>
-                    )}
+                    <PlanActions plan="FREE" isCurrent={isFree} />
                 </div>
 
                 {/* Pro Plan */}
@@ -129,15 +121,7 @@ export default async function SubscriptionPage() {
                             <Feature text="Relatórios avançados" light />
                             <Feature text="Suporte prioritário" light />
                         </ul>
-                        {!isFree ? (
-                            <Button variant="secondary" fullWidth className="bg-white text-primary-600 hover:bg-white/90">
-                                Gerenciar Assinatura
-                            </Button>
-                        ) : (
-                            <Button variant="secondary" fullWidth className="bg-white text-primary-600 hover:bg-white/90">
-                                Fazer Upgrade
-                            </Button>
-                        )}
+                        <PlanActions plan="PRO" isCurrent={!isFree} />
                     </div>
                 </div>
             </div>

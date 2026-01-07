@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Calendar, Edit2, CheckCircle, Loader2 } from "lucide-react";
+import { Plus, FileText, Calendar, Edit2, CheckCircle, Loader2, Link as LinkIcon, Copy } from "lucide-react";
 
 export default function ChargesPage() {
     const [charges, setCharges] = useState<any[]>([]);
@@ -25,6 +25,39 @@ export default function ChargesPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleGenerateLink = async (chargeId: string) => {
+        setActionLoading(`link-${chargeId}`);
+        try {
+            const res = await fetch(`/api/charges/${chargeId}/pay`, {
+                method: 'POST',
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                if (data.error && data.error.includes("Mercado Pago access token")) {
+                    alert("Configure seu Token do Mercado Pago em Configurações > Pagamentos");
+                    return;
+                }
+                throw new Error(data.error || 'Erro ao gerar link');
+            }
+
+            // Refresh charges to show the link
+            await fetchCharges();
+            alert('Link de pagamento gerado com sucesso!');
+        } catch (error) {
+            console.error('Error generating link:', error);
+            alert('Erro ao gerar link. Verifique suas configurações.');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleCopyLink = (url: string) => {
+        navigator.clipboard.writeText(url);
+        alert("Link copiado para a área de transferência!");
     };
 
     const handleMarkAsPaid = async (chargeId: string) => {
@@ -128,25 +161,58 @@ export default function ChargesPage() {
 
                                 <div className="flex items-center gap-2 mt-1">
                                     {charge.status !== 'PAID' && (
-                                        <Button
-                                            size="sm"
-                                            onClick={() => handleMarkAsPaid(charge.id)}
-                                            disabled={actionLoading === charge.id}
-                                            className="flex-1 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-transparent shadow-none"
-                                        >
-                                            {actionLoading === charge.id ? (
-                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                        <>
+                                            {charge.paymentUrl ? (
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => handleCopyLink(charge.paymentUrl)}
+                                                    className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                >
+                                                    <Copy className="h-4 w-4 mr-1.5" />
+                                                    Link
+                                                </Button>
                                             ) : (
-                                                <>
-                                                    <CheckCircle className="h-4 w-4 mr-1.5" />
-                                                    Marcar Pago
-                                                </>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => handleGenerateLink(charge.id)}
+                                                    disabled={actionLoading === `link-${charge.id}`}
+                                                    className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                >
+                                                    {actionLoading === `link-${charge.id}` ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <>
+                                                            <LinkIcon className="h-4 w-4 mr-1.5" />
+                                                            Link
+                                                        </>
+                                                    )}
+                                                </Button>
                                             )}
-                                        </Button>
+
+                                            <Button
+                                                size="sm"
+                                                onClick={() => handleMarkAsPaid(charge.id)}
+                                                disabled={actionLoading === charge.id}
+                                                className="flex-1 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-transparent shadow-none"
+                                            >
+                                                {actionLoading === charge.id ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <>
+                                                        <CheckCircle className="h-4 w-4 mr-1.5" />
+                                                        Pago
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </>
                                     )}
+                                </div>
+                                <div className="flex items-center justify-between mt-0 pt-0">
                                     <Link
                                         href={`/dashboard/charges/${charge.id}/edit`}
-                                        className={`flex-1 ${buttonVariants({ size: 'sm', variant: 'outline' })}`}
+                                        className={`w-full ${buttonVariants({ size: 'sm', variant: 'outline' })}`}
                                     >
                                         <Edit2 className="h-4 w-4 mr-1.5" />
                                         Editar
@@ -203,29 +269,56 @@ export default function ChargesPage() {
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex items-center justify-end gap-2">
                                                 {charge.status !== 'PAID' && (
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() => handleMarkAsPaid(charge.id)}
-                                                        disabled={actionLoading === charge.id}
-                                                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                                    >
-                                                        {actionLoading === charge.id ? (
-                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                    <>
+                                                        {charge.paymentUrl ? (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                onClick={() => handleCopyLink(charge.paymentUrl)}
+                                                                title="Copiar Link de Pagamento"
+                                                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                            >
+                                                                <Copy className="h-4 w-4" />
+                                                            </Button>
                                                         ) : (
-                                                            <>
-                                                                <CheckCircle className="h-4 w-4 mr-1" />
-                                                                Marcar Pago
-                                                            </>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                onClick={() => handleGenerateLink(charge.id)}
+                                                                disabled={actionLoading === `link-${charge.id}`}
+                                                                title="Gerar Link de Pagamento"
+                                                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                            >
+                                                                {actionLoading === `link-${charge.id}` ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <LinkIcon className="h-4 w-4" />
+                                                                )}
+                                                            </Button>
                                                         )}
-                                                    </Button>
+
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() => handleMarkAsPaid(charge.id)}
+                                                            disabled={actionLoading === charge.id}
+                                                            title="Marcar como Pago"
+                                                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                        >
+                                                            {actionLoading === charge.id ? (
+                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                            ) : (
+                                                                <CheckCircle className="h-4 w-4" />
+                                                            )}
+                                                        </Button>
+                                                    </>
                                                 )}
                                                 <Link
                                                     href={`/dashboard/charges/${charge.id}/edit`}
-                                                    className={buttonVariants({ size: 'sm', variant: 'outline' })}
+                                                    className={buttonVariants({ size: 'sm', variant: 'ghost' })}
+                                                    title="Editar"
                                                 >
-                                                    <Edit2 className="h-4 w-4 mr-1" />
-                                                    Editar
+                                                    <Edit2 className="h-4 w-4" />
                                                 </Link>
                                             </div>
                                         </td>

@@ -23,6 +23,9 @@ model User {
   subscriptions Subscription[]
   messageTemplates MessageTemplate[]
   
+  // Payment Config
+  mpAccessToken String? @map("mp_access_token")
+
   @@map("users")
 }
 
@@ -71,6 +74,12 @@ model Charge {
   reminderDueSent    Boolean @default(false) @map("reminder_due_sent")
   reminderAfterSent  Boolean @default(false) @map("reminder_after_sent")
   lastReminderSentAt DateTime? @map("last_reminder_sent_at")
+  
+  // Payment Info - Mercado Pago
+  paymentUrl      String?   @map("payment_url")
+  externalId      String?   @map("external_id") // Mercadopago Preference ID
+  paymentMethod   String?   @map("payment_method") // pix, credit_card
+  paidAt          DateTime? @map("paid_at")
   
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)

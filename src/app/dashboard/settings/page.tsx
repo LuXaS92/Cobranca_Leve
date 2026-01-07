@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { User, Lock, Bell, Loader2, Save } from "lucide-react";
+import { User, Lock, Bell, Loader2, Save, Wallet } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 export default function SettingsPage() {
@@ -16,6 +16,7 @@ export default function SettingsPage() {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [mpAccessToken, setMpAccessToken] = useState("");
 
     useEffect(() => {
         fetchProfile();
@@ -28,6 +29,7 @@ export default function SettingsPage() {
             if (data) {
                 setName(data.name || "");
                 setEmail(data.email || "");
+                setMpAccessToken(data.mpAccessToken || "");
             }
         } catch (error) {
             console.error('Error fetching profile:', error);
@@ -53,7 +55,7 @@ export default function SettingsPage() {
                 }
             }
 
-            const body: any = { name, email };
+            const body: any = { name, email, mpAccessToken };
             if (newPassword) {
                 body.currentPassword = currentPassword;
                 body.newPassword = newPassword;
@@ -179,6 +181,35 @@ export default function SettingsPage() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                             />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Integrations Section */}
+                <div className="clean-card p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <Wallet size={20} className="text-blue-600" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-slate-800">Pagamentos</h2>
+                            <p className="text-sm text-slate-500">Integração com Mercado Pago</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Access Token (Mercado Pago)</label>
+                            <input
+                                className="clean-input w-full font-mono text-sm"
+                                type="password"
+                                placeholder="TEST-1234..."
+                                value={mpAccessToken}
+                                onChange={(e) => setMpAccessToken(e.target.value)}
+                            />
+                            <p className="text-xs text-slate-500 mt-2">
+                                Encontre sem suas credenciais no painel do Mercado Pago Developers.
+                            </p>
                         </div>
                     </div>
                 </div>
