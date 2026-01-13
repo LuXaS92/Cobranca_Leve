@@ -17,6 +17,7 @@ export default function SettingsPage() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [mpAccessToken, setMpAccessToken] = useState("");
+    const [paymentInfo, setPaymentInfo] = useState("");
 
     useEffect(() => {
         fetchProfile();
@@ -30,6 +31,7 @@ export default function SettingsPage() {
                 setName(data.name || "");
                 setEmail(data.email || "");
                 setMpAccessToken(data.mpAccessToken || "");
+                setPaymentInfo(data.paymentInfo || "");
             }
         } catch (error) {
             console.error('Error fetching profile:', error);
@@ -55,7 +57,7 @@ export default function SettingsPage() {
                 }
             }
 
-            const body: any = { name, email, mpAccessToken };
+            const body: any = { name, email, mpAccessToken, paymentInfo };
             if (newPassword) {
                 body.currentPassword = currentPassword;
                 body.newPassword = newPassword;
@@ -208,8 +210,23 @@ export default function SettingsPage() {
                                 onChange={(e) => setMpAccessToken(e.target.value)}
                             />
                             <p className="text-xs text-slate-500 mt-2">
-                                Encontre sem suas credenciais no painel do Mercado Pago Developers.
+                                Encontre suas credenciais no painel do Mercado Pago Developers.
                             </p>
+                        </div>
+
+                        <div className="pt-4 border-t border-slate-100">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Informações Manuais de Pagamento
+                            </label>
+                            <p className="text-xs text-slate-500 mb-2">
+                                Estas informações serão enviadas junto com os lembretes de cobrança. Ótimo para enviar sua chave PIX ou dados bancários.
+                            </p>
+                            <textarea
+                                className="clean-input w-full min-h-[100px]"
+                                placeholder={`Exemplo:\nChave PIX: 123.456.789-00\nBanco: Nubank\nAg: 0001 cc: 123456-7`}
+                                value={paymentInfo}
+                                onChange={(e) => setPaymentInfo(e.target.value)}
+                            />
                         </div>
                     </div>
                 </div>

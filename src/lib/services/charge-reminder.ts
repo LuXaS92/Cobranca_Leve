@@ -2,35 +2,48 @@ import { prisma } from '../prisma';
 import { ChargeReminderJob } from '../queue';
 import { sendEmail } from '../mail';
 import { differenceInDays } from 'date-fns';
+import { createPreference } from '../mercadopago';
 
 // Message templates for each reminder type
 const REMINDER_TEMPLATES = {
     before_due: {
         subject: 'Lembrete: Pagamento vence em 3 dias',
-        getMessage: (clientName: string, amount: string, dueDate: string) => `
+        getMessage: (clientName: string, amount: string, dueDate: string, paymentLink?: string, paymentInfo?: string) => `
 Oi ${clientName}, tudo bem? 😊
 
 Passando só para lembrar que o pagamento de R$ ${amount} vence em 3 dias (${dueDate}).
+
+${paymentLink ? `Para facilitar, segue o link de pagamento: ${paymentLink}` : ''}
+
+${paymentInfo ? `\nDados para Pagamento:\n${paymentInfo}\n` : ''}
 
 Se já tiver feito, por favor desconsidere! Qualquer dúvida estou à disposição.
     `.trim(),
     },
     due_day: {
         subject: 'Lembrete: Pagamento vence hoje',
-        getMessage: (clientName: string, amount: string, dueDate: string) => `
+        getMessage: (clientName: string, amount: string, dueDate: string, paymentLink?: string, paymentInfo?: string) => `
 Olá ${clientName},
 
 Hoje é o dia do vencimento do pagamento de R$ ${amount}.
+
+${paymentLink ? `Clique aqui para realizar o pagamento agora: ${paymentLink}` : ''}
+
+${paymentInfo ? `\nDados para Pagamento:\n${paymentInfo}\n` : ''}
 
 Caso já tenha realizado, por favor envie o comprovante. Obrigado!
     `.trim(),
     },
     overdue: {
         subject: 'Pagamento em atraso',
-        getMessage: (clientName: string, amount: string, dueDate: string) => `
+        getMessage: (clientName: string, amount: string, dueDate: string, paymentLink?: string, paymentInfo?: string) => `
 Prezado(a) ${clientName},
 
 Notamos que o pagamento de R$ ${amount} com vencimento em ${dueDate} ainda está pendente.
+
+${paymentLink ? `Você pode regularizar o pagamento através deste link: ${paymentLink}` : ''}
+
+${paymentInfo ? `\nDados para Pagamento:\n${paymentInfo}\n` : ''}
 
 Por favor, regularize quando possível ou entre em contato caso haja alguma divergência.
 
@@ -42,10 +55,13 @@ Atenciosamente.
 export async function sendChargeReminder(job: ChargeReminderJob) {
     const { chargeId, reminderType, userId } = job;
 
-    // Fetch charge with client data
+    // Fetch charge with client data and user settings
     const charge = await prisma.charge.findUnique({
         where: { id: chargeId },
-        include: { client: true, user: true },
+        include: {
+            client: true,
+            user: true
+        },
     });
 
     // Validations
@@ -73,13 +89,51 @@ export async function sendChargeReminder(job: ChargeReminderJob) {
         return { skipped: true, reason: 'already_sent' };
     }
 
+    // Generate Payment Link if not exists and proper credentials setup
+    let paymentUrl = charge.paymentUrl;
+
+    if (!paymentUrl && charge.user.mpAccessToken) {
+        try {
+            const preference = await createPreference(charge.user.mpAccessToken, {
+                id: charge.id,
+                userId: charge.userId,
+                amount: Number(charge.amount),
+                description: charge.description || `Pagamento - ${charge.client.name}`,
+                dueDate: charge.dueDate,
+                client: {
+                    name: charge.client.name,
+                    email: charge.client.email || undefined
+                }
+            });
+
+            if (preference.init_point) {
+                paymentUrl = preference.init_point;
+                // Save generated link to avoid re-generating
+                await prisma.charge.update({
+                    where: { id: charge.id },
+                    data: {
+                        paymentUrl: preference.init_point,
+                        externalId: preference.id
+                    }
+                });
+                console.log(`🔗 Generated MP Link for charge ${charge.id}`);
+            }
+        } catch (error) {
+            console.error(`Error generating MP link for automated reminder:`, error);
+            // Continue without link rather than failing the whole reminder?
+            // Yes, better to remind without link than not remind at all.
+        }
+    }
+
     // Get template
     const template = REMINDER_TEMPLATES[reminderType];
     const clientName = charge.client.name.split(' ')[0]; // First name only
     const amount = Number(charge.amount).toFixed(2);
     const dueDate = new Date(charge.dueDate).toLocaleDateString('pt-BR');
+    const paymentInfo = charge.user.paymentInfo;
 
-    const message = template.getMessage(clientName, amount, dueDate);
+    // Pass paymentUrl (can be null) and paymentInfo
+    const message = template.getMessage(clientName, amount, dueDate, paymentUrl || undefined, paymentInfo || undefined);
     const messageHtml = message.replace(/\n/g, '<br>');
 
     // Send via email if client has email
@@ -94,6 +148,21 @@ export async function sendChargeReminder(job: ChargeReminderJob) {
             <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; color: #374151;">
               ${messageHtml}
             </div>
+            ${paymentUrl ? `
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="${paymentUrl}" style="background-color: #009ee3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                    Pagar Agora
+                </a>
+            </div>
+            ` : ''}
+            
+            ${paymentInfo ? `
+            <div style="margin-top: 20px; padding: 15px; background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 6px;">
+                <h4 style="margin: 0 0 10px 0; color: #92400e;">Dados para Pagamento Manual</h4>
+                <p style="white-space: pre-wrap; margin: 0; color: #78350f;">${paymentInfo}</p>
+            </div>
+            ` : ''}
+
             <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px;">
               Enviado via Cobrança Leve
             </p>
@@ -132,6 +201,7 @@ export async function sendChargeReminder(job: ChargeReminderJob) {
         chargeId,
         reminderType,
         sentTo: charge.client.email || charge.client.whatsapp,
+        hasPaymentLink: !!paymentUrl
     };
 }
 

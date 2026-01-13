@@ -15,11 +15,32 @@ export function PlanActions({ plan, isCurrent }: PlanActionsProps) {
     const router = useRouter();
 
     const handleSubscriptionChange = async () => {
-        if (!confirm(`Tem certeza que deseja mudar para o plano ${plan}?`)) return;
+        // If downgrading to FREE, we still do it directly/immediately (simpler for now)
+        if (plan === "FREE") {
+            if (!confirm(`Tem certeza que deseja mudar para o plano Gratuito?`)) return;
+            setLoading(true);
+            try {
+                const res = await fetch('/api/subscription/change', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plan: "FREE" }),
+                });
+                if (res.ok) {
+                    alert("Plano alterado com sucesso!");
+                    router.refresh();
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+            return;
+        }
 
+        // For PRO, we initiate checkout
         setLoading(true);
         try {
-            const res = await fetch('/api/subscription/change', {
+            const res = await fetch('/api/subscription/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ plan }),
@@ -27,15 +48,19 @@ export function PlanActions({ plan, isCurrent }: PlanActionsProps) {
 
             if (!res.ok) {
                 const data = await res.json();
-                throw new Error(data.error || "Erro ao alterar plano");
+                throw new Error(data.error || "Erro ao iniciar pagamento");
             }
 
-            alert(`Plano alterado para ${plan} com sucesso!`);
-            router.refresh();
-        } catch (error) {
+            const data = await res.json();
+
+            // Redirect to Mercado Pago
+            if (data.paymentUrl) {
+                window.location.href = data.paymentUrl;
+            }
+
+        } catch (error: any) {
             console.error(error);
-            alert("Erro ao processar solicitação");
-        } finally {
+            alert(error.message || "Erro ao processar solicitação");
             setLoading(false);
         }
     };
