@@ -90,6 +90,7 @@ model Charge {
   @@index([clientId])
   @@index([status])
   @@index([dueDate])
+  @@index([externalId]) // Optimized for Webhooks
   @@map("charges")
 }
 
@@ -102,6 +103,7 @@ model MessageTemplate {
   
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("message_templates")
 }
 
