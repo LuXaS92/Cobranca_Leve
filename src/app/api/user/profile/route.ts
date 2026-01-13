@@ -86,11 +86,14 @@ export async function PATCH(req: NextRequest) {
 
         return NextResponse.json(updatedUser);
 
-    } catch (error) {
+    } catch (error: any) {
+        console.error("Profile Update Error (Full):", error);
+
         if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
+            const message = error.errors?.[0]?.message || "Erro de validação (detalhes indisponíveis)";
+            return NextResponse.json({ error: message }, { status: 400 });
         }
-        console.error("Error updating profile:", error);
+
         return NextResponse.json(
             { error: "Erro ao atualizar perfil" },
             { status: 500 }

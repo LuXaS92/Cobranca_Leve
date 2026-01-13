@@ -42,6 +42,23 @@ export default function SettingsPage() {
         }
     };
 
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 2 * 1024 * 1024) { // 2MB limit
+            alert("A imagem deve ter no máximo 2MB.");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64String = reader.result as string;
+            setImage(base64String);
+        };
+        reader.readAsDataURL(file);
+    };
+
     const handleSave = async () => {
         setSaving(true);
         try {
@@ -144,21 +161,47 @@ export default function SettingsPage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Foto de Perfil (URL)</label>
-                            <div className="flex gap-4">
-                                <input
-                                    className="clean-input flex-1"
-                                    placeholder="https://exemplo.com/minha-foto.jpg"
-                                    value={image}
-                                    onChange={(e) => setImage(e.target.value)}
-                                />
-                                {image && (
-                                    <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 shrink-0">
-                                        <img src={image} alt="Preview" className="w-full h-full object-cover" />
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Foto de Perfil</label>
+                            <div className="flex flex-col gap-4">
+                                <div className="flex gap-4 items-start">
+                                    <div className="flex-1 space-y-2">
+                                        <div className="flex gap-2">
+                                            <input
+                                                className="clean-input flex-1"
+                                                placeholder="Link ou upload..."
+                                                value={image}
+                                                onChange={(e) => setImage(e.target.value)}
+                                            />
+                                            <div className="relative">
+                                                <input
+                                                    type="file"
+                                                    id="file-upload"
+                                                    className="hidden"
+                                                    accept="image/*"
+                                                    onChange={handleFileUpload}
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() => document.getElementById('file-upload')?.click()}
+                                                    className="whitespace-nowrap"
+                                                >
+                                                    📂 Carregar
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-slate-500">
+                                            Cole uma URL ou carregue do seu dispositivo (Max: 2MB).
+                                        </p>
                                     </div>
-                                )}
+
+                                    {image && (
+                                        <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-200 shrink-0 bg-slate-100">
+                                            <img src={image} alt="Preview" className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            <p className="text-xs text-slate-500 mt-1">Cole o link de uma imagem (ex: LinkedIn, Gravatar)</p>
                         </div>
                     </div>
                 </div>
