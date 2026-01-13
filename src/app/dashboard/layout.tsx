@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { UserNav } from "@/components/layout/UserNav";
 
 export default function DashboardLayout({
     children,
@@ -83,7 +84,7 @@ export default function DashboardLayout({
                     </button>
 
                     <div className="ml-auto flex items-center gap-4">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-400 to-secondary-500 border-2 border-white shadow-md"></div>
+                        <UserNav />
                     </div>
                 </header>
 

@@ -26,6 +26,7 @@ model User {
   // Payment Config
   mpAccessToken String? @map("mp_access_token")
   paymentInfo   String? @map("payment_info") // Manual info like PIX key, Bank Account
+  image         String? // Profile picture URL
 
   @@map("users")
 }

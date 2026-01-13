@@ -18,6 +18,7 @@ export default function SettingsPage() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [mpAccessToken, setMpAccessToken] = useState("");
     const [paymentInfo, setPaymentInfo] = useState("");
+    const [image, setImage] = useState("");
 
     useEffect(() => {
         fetchProfile();
@@ -32,6 +33,7 @@ export default function SettingsPage() {
                 setEmail(data.email || "");
                 setMpAccessToken(data.mpAccessToken || "");
                 setPaymentInfo(data.paymentInfo || "");
+                setImage(data.image || "");
             }
         } catch (error) {
             console.error('Error fetching profile:', error);
@@ -57,7 +59,7 @@ export default function SettingsPage() {
                 }
             }
 
-            const body: any = { name, email, mpAccessToken, paymentInfo };
+            const body: any = { name, email, mpAccessToken, paymentInfo, image };
             if (newPassword) {
                 body.currentPassword = currentPassword;
                 body.newPassword = newPassword;
@@ -119,24 +121,44 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Nome Completo</label>
-                            <input
-                                className="clean-input w-full"
-                                placeholder="Seu nome"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                            />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Nome Completo</label>
+                                <input
+                                    className="clean-input w-full"
+                                    placeholder="Seu nome"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+                                <input
+                                    className="clean-input w-full"
+                                    type="email"
+                                    placeholder="seu@email.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </div>
                         </div>
+
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
-                            <input
-                                className="clean-input w-full"
-                                type="email"
-                                placeholder="seu@email.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Foto de Perfil (URL)</label>
+                            <div className="flex gap-4">
+                                <input
+                                    className="clean-input flex-1"
+                                    placeholder="https://exemplo.com/minha-foto.jpg"
+                                    value={image}
+                                    onChange={(e) => setImage(e.target.value)}
+                                />
+                                {image && (
+                                    <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 shrink-0">
+                                        <img src={image} alt="Preview" className="w-full h-full object-cover" />
+                                    </div>
+                                )}
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">Cole o link de uma imagem (ex: LinkedIn, Gravatar)</p>
                         </div>
                     </div>
                 </div>
@@ -164,25 +186,27 @@ export default function SettingsPage() {
                                 onChange={(e) => setCurrentPassword(e.target.value)}
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Nova Senha</label>
-                            <input
-                                className="clean-input w-full"
-                                type="password"
-                                placeholder="••••••••"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Confirmar Nova Senha</label>
-                            <input
-                                className="clean-input w-full"
-                                type="password"
-                                placeholder="••••••••"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                            />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Nova Senha</label>
+                                <input
+                                    className="clean-input w-full"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Confirmar Nova Senha</label>
+                                <input
+                                    className="clean-input w-full"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -195,11 +219,11 @@ export default function SettingsPage() {
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-slate-800">Pagamentos</h2>
-                            <p className="text-sm text-slate-500">Integração com Mercado Pago</p>
+                            <p className="text-sm text-slate-500">Configure como seus clientes pagarão</p>
                         </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">Access Token (Mercado Pago)</label>
                             <input
@@ -210,23 +234,45 @@ export default function SettingsPage() {
                                 onChange={(e) => setMpAccessToken(e.target.value)}
                             />
                             <p className="text-xs text-slate-500 mt-2">
-                                Encontre suas credenciais no painel do Mercado Pago Developers.
+                                Necessário para gerar links automáticos de pagamento (Boleto/PIX/Cartão).
                             </p>
                         </div>
 
-                        <div className="pt-4 border-t border-slate-100">
+                        <div className="pt-6 border-t border-slate-100">
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                                <h4 className="text-sm font-bold text-yellow-800 mb-1 flex items-center gap-2">
+                                    💡 Onde isso aparece?
+                                </h4>
+                                <p className="text-sm text-yellow-700">
+                                    As informações abaixo serão inseridas em um <strong>quadro de destaque</strong> no final de todas as mensagens de cobrança (Email e Zap).
+                                    Use este espaço para informar sua Chave PIX, Conta Bancária ou instruções de transferência.
+                                </p>
+                            </div>
+
                             <label className="block text-sm font-medium text-slate-700 mb-2">
-                                Informações Manuais de Pagamento
+                                Instruções de Pagamento Manual (PIX/Transferência)
                             </label>
-                            <p className="text-xs text-slate-500 mb-2">
-                                Estas informações serão enviadas junto com os lembretes de cobrança. Ótimo para enviar sua chave PIX ou dados bancários.
-                            </p>
                             <textarea
-                                className="clean-input w-full min-h-[100px]"
-                                placeholder={`Exemplo:\nChave PIX: 123.456.789-00\nBanco: Nubank\nAg: 0001 cc: 123456-7`}
+                                className="clean-input w-full min-h-[120px] font-mono text-sm"
+                                placeholder={`Exemplo:\n\nChave PIX: 12.345.678/0001-99 (CNPJ)\nBanco: Nubank\nFavorecido: Sua Empresa LTDA\n\nPor favor, envie o comprovante para (11) 99999-9999`}
                                 value={paymentInfo}
                                 onChange={(e) => setPaymentInfo(e.target.value)}
                             />
+
+                            {/* Live Preview */}
+                            {paymentInfo && (
+                                <div className="mt-4">
+                                    <h5 className="text-xs uppercase font-bold text-slate-400 mb-2">Prévia da Mensagem:</h5>
+                                    <div className="p-4 bg-white border border-slate-200 rounded-lg shadow-sm">
+                                        <p className="text-slate-500 text-sm mb-4 italic">[...conteúdo da cobrança...]</p>
+                                        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-900 whitespace-pre-wrap">
+                                            <strong>Dados para Pagamento Manual:</strong>
+                                            <br /><br />
+                                            {paymentInfo}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
