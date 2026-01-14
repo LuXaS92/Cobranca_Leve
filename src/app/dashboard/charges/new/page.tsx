@@ -33,7 +33,9 @@ const TEMPLATES = {
     }
 };
 
-export default function NewChargePage() {
+import { Suspense } from "react";
+
+function NewChargeForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const preSelectedClient = searchParams.get("client");
@@ -307,5 +309,17 @@ export default function NewChargePage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function NewChargePage() {
+    return (
+        <Suspense fallback={
+            <div className="h-screen flex items-center justify-center">
+                <Loader2 className="animate-spin text-primary-500 h-8 w-8" />
+            </div>
+        }>
+            <NewChargeForm />
+        </Suspense>
     );
 }
